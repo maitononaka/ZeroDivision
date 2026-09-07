@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>ZERO DIVISION // Field Simulator</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {"imports":{"three":"https://esm.sh/three@0.185.1"}}
+  </script>
+
+</head>
+<body>
+  <div id="app">
+    <div id="deploy-screen" class="screen active">
+      <div class="geo geo-a"></div><div class="geo geo-b"></div><div class="geo geo-c"></div>
+      <div class="brand"><span class="eyebrow">戦術フィールドシミュレーション</span><h1>ZERO<br><span>DIVISION</span></h1><p>FIELD OPERATIONS // BUILD 0.8</p></div>
+      <div class="deploy-actions">
+        <button id="open-loadout" class="primary">装備</button>
+        <button id="open-settings">設定</button>
+        <button id="quick-deploy">クイック出撃</button>
+      </div>
+      <div class="statusbar"><span>ローカルシミュレーション</span><span>THREE.JS / WEBGL</span><span>iPad A16 対応</span></div>
+    </div>
+
+    <div id="loadout-screen" class="screen">
+      <div class="panel topbar"><button class="back" data-back="deploy-screen">← 戻る</button><div class="panel-title">装備</div><div class="mini-status">CONFIG // <span id="loadout-ready">準備完了</span></div></div>
+      <div class="loadout-grid">
+        <section class="preview-card"><div class="section-title">オペレーター プレビュー</div><div id="operator-preview"></div><div class="preview-label">外見設定</div></section>
+        <section class="choices">
+          <div class="choice-group"><h3>アーマー</h3><div class="choice-row" id="armor-choices"></div></div>
+          <div class="choice-group"><h3>ヘルメット</h3><div class="choice-row" id="helmet-choices"></div></div>
+          <div class="choice-group"><h3>メインウェポン</h3><div class="choice-row" id="primary-choices"></div></div>
+          <div class="choice-group"><h3>サブウェポン</h3><div class="choice-row" id="secondary-choices"></div></div>
+          <div class="choice-group"><h3>近接格闘</h3><div class="choice-row" id="melee-choices"></div></div>
+          <div class="choice-group"><h3>メディキット</h3><div class="choice-row" id="utility-choices"></div></div>
+          <div class="attachment-grid">
+            <div class="choice-group"><h3>マズルアタッチメント</h3><div class="choice-row" id="muzzle-choices"></div></div>
+            <div class="choice-group"><h3>ストックアタッチメント</h3><div class="choice-row" id="stock-choices"></div></div>
+            <div class="choice-group"><h3>サイト</h3><div class="choice-row" id="sight-choices"></div></div>
+          </div>
+          <div class="nudity-note">装備なしでの出撃も可能。4キーでメディキットを使用。</div>
+        </section>
+      </div>
+      <div class="loadout-footer"><button id="go-staging" class="primary big">出撃準備へ →</button></div>
+    </div>
+
+    <div id="settings-screen" class="screen">
+      <div class="panel topbar"><button class="back" data-back="deploy-screen">← 戻る</button><div class="panel-title">設定</div><div></div></div>
+      <div class="settings-wrap">
+        <div class="settings-card"><h2>操作</h2>
+          <label>ダッシュ方式 <select id="dash-mode"><option value="toggle">トグル</option><option value="hold">長押し</option></select></label>
+          <label>しゃがみ方式 <select id="crouch-mode"><option value="toggle">トグル</option><option value="hold" selected>長押し</option></select></label>
+          <label class="check"><input type="checkbox" id="hands-toggle" checked> 手を表示</label>
+          <label class="check"><input type="checkbox" id="compass-toggle" checked> コンパスを表示</label>
+          <label>マウス感度 <input id="sensitivity" type="range" min="0.3" max="2" step="0.05" value="1"></label>
+          <label>ダッシュ時の視点揺れ <input id="shake-size" type="range" min="0" max="1.5" step="0.05" value="0.35"></label>
+          <div class="keybinds"><span><span>WASD</span> 移動 <span>MOUSE</span> 視点 <span>CTRL</span> ダッシュ <span>SHIFT</span> しゃがみ <span>Q / E</span> リーン <span>SPACE</span> ジャンプ <span>ESC</span> ポーズ</div>
+        </div>
+        <div class="settings-card"><h2>パフォーマンス</h2>
+          <label>描画解像度上限 <select id="pixel-ratio"><option value="1.25">1.25×</option><option value="1.5" selected>1.50×</option><option value="2">2.00×</option></select></label>
+          <label class="check"><input type="checkbox" id="shadows-toggle" checked> 動的シャドウ</label>
+          <label class="check"><input type="checkbox" id="sky-toggle" checked> 空と大気</label>
+          <p class="muted">この試作版は重いポストエフェクトより安定したフレーム時間を優先しています。後でGLBモデルへ差し替えられます。</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="staging-screen" class="screen">
+      <div class="panel topbar"><button class="back" data-back="loadout-screen">← 戻る</button><div class="panel-title">出撃準備</div><div class="mini-status">任務 // 偵察</div></div>
+      <div class="staging-grid">
+        <section class="map-list"><div class="section-title">マップ選択</div>
+          <button class="map-option selected" data-map="city"><b>市街地 / ブロック7</b><span>中規模 // 市街地</span></button>
+          <button class="map-option" data-map="mountain"><b>山岳 / リッジライン</b><span>広域 // 高低差 / 急斜面</span></button>
+          <button class="map-option" data-map="interior"><b>室内 / 施設03</b><span>狭小 // 多層 / ガラス</span></button>
+        </section>
+        <section class="mission-card"><div class="section-title">SIMULATION 設定</div>
+          <label>敵ユニット数 <input id="bot-count" type="range" min="2" max="14" value="6"><strong id="bot-count-value">6</strong></label>
+          <div class="mission-stats"><div><span>MAP</span><b id="staging-map-name">市街地 / ブロック7</b></div><div><span>敵ユニット</span><b id="staging-bots">6</b></div><div><span>天候</span><b>安定</b></div></div>
+          <button id="deploy-btn" class="primary big">シミュレーションへ出撃</button>
+        </section>
+      </div>
+    </div>
+
+    <div id="loading-screen" class="screen">
+      <div class="loading-orbit"></div>
+      <div class="loading-shell">
+        <div class="loading-main">
+          <div class="loading-content">
+            <span class="eyebrow">ZERO DIVISION // FIELD LOAD</span>
+            <h2 id="loading-title">市街地 / ブロック7</h2>
+            <div id="loading-code" class="loading-code">CITY // BLOCK 7</div>
+            <p id="loading-status">シーンを初期化しています…</p>
+            <div class="loading-bar"><i id="loading-fill"></i></div>
+            <div class="loading-meta"><span id="loading-percent">0%</span><span>WEBGL / THREE.JS</span></div>
+          </div>
+          <div class="preview-frame">
+            <div class="preview-header"><span>TACTICAL MAP PREVIEW</span><span>LIVE</span></div>
+            <div id="loading-preview"></div>
+          </div>
+        </div>
+        <div class="briefing-grid">
+          <section class="loading-card briefing-card">
+            <div class="loading-card-title">作戦概要</div>
+            <p id="loading-brief">都市区画を横断し、指定エリアの状況を確認する。</p>
+            <div class="brief-tags"><span id="loading-tip-1">中距離を維持</span><span id="loading-tip-2">遮蔽物を活用</span><span id="loading-tip-3">交差点を優先確認</span></div>
+          </section>
+          <section class="loading-card">
+            <div class="loading-card-title">推奨装備</div>
+            <div class="rec-row"><span>アーマー</span><b id="load-rec-armor">ライト</b></div>
+            <div class="rec-row"><span>ヘルメット</span><b id="load-rec-helmet">偵察</b></div>
+            <div class="rec-row"><span>メインツール</span><b id="load-rec-tool">スキャナー</b></div>
+            <div class="rec-row"><span>サブツール</span><b id="load-rec-support">ビーコン</b></div>
+          </section>
+          <section class="loading-card compact-card">
+            <div class="loading-card-title">シミュレーション</div>
+            <div class="sim-number"><b id="load-bots">06</b><span>敵ユニット</span></div>
+            <div class="sim-note">ロード完了後、自動的にフィールドへ移行します。</div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-ui" class="hidden">
+      <div id="crosshair"><i></i><i></i><i></i><i></i></div>
+      <div class="hud top-left"><span>ZERO DIVISION</span><small id="map-hud">市街地 / ブロック7</small></div>
+      <div id="compass" class="compass"><div id="compass-heading" class="compass-heading">000°</div><div class="compass-notch"></div><div id="compass-strip" class="compass-strip">N     NE     E     SE     S</div></div>
+      <div class="hud top-right"><span id="hud-state">準備完了</span><small><b id="fps">-- FPS</b> <b id="ping">-- ms</b> <b id="packet-loss">0.0 %</b></small></div>
+      <div class="hud bottom-left"><div class="hud-line"><span>姿勢</span><b id="stance">立ち</b></div><div class="hud-line"><span>移動</span><b id="drive">歩行</b></div></div>
+      <div class="hud bottom-right"><div class="hud-line"><span>敵ユニット</span><b id="enemy-counter">6</b></div><div class="hud-line"><span>武器</span><b id="weapon-hud">M4A1</b></div><div class="ammo-block"><div class="ammo-count" id="ammo-value">30 / 120</div><div class="ammo-sub" id="fire-mode">連射</div></div><div class="status-meter"><div class="meter-label"><span>HP</span><b><span id="hp-value">100</span> / 100</b></div><div class="meter"><i id="hp-fill"></i></div></div><div class="status-meter"><div class="meter-label"><span>STAMINA</span><b><span id="stamina-value">100</span> / 100</b></div><div class="meter"><i id="stamina-fill"></i></div></div></div>
+        <div id="mobile-look-zone" aria-hidden="true"></div>
+        <div id="mobile-controls" aria-label="モバイル操作">
+          <div id="mobile-joystick" class="mobile-control mobile-joystick" data-control="joystick">
+            <div class="joystick-ring"></div><div class="joystick-knob"></div><span>MOVE</span>
+          </div>
+          <button class="mobile-control touch-button weapon-slot slot-primary" data-action="primary"><b>1</b><span id="mobile-primary-label">M4A1</span></button>
+          <button class="mobile-control touch-button weapon-slot slot-main2" data-action="main2"><b>2</b><span>MAIN 2</span></button>
+          <button class="mobile-control touch-button weapon-slot slot-sidearm" data-action="sidearm"><b>3</b><span id="mobile-sidearm-label">P320</span></button>
+          <button class="mobile-control touch-button weapon-slot slot-melee" data-action="melee"><b>4</b><span>KNIFE</span></button>
+          <button class="mobile-control touch-button utility-slot" data-action="medkit"><span>MED</span></button>
+          <button class="mobile-control touch-button fire-button" data-action="fire"><span>FIRE</span></button>
+          <button class="mobile-control touch-button ads-button" data-action="ads"><span>ADS</span></button>
+          <button class="mobile-control touch-button reload-button" data-action="reload"><span>↻</span></button>
+          <button class="mobile-control touch-button firemode-button" data-action="firemode"><span id="mobile-firemode-label">AUTO</span></button>
+          <button class="mobile-control touch-button jump-button" data-action="jump"><span>JUMP</span></button>
+          <button class="mobile-control touch-button crouch-button" data-action="crouch"><span>C</span></button>
+          <button class="mobile-control touch-button prone-button" data-action="prone"><span>PRONE</span></button>
+          <button class="mobile-control touch-button lean-left" data-action="lean-left"><span>◀︎</span></button>
+          <button class="mobile-control touch-button lean-right" data-action="lean-right"><span>▶︎</span></button>
+        </div>
+        <div id="mobile-layout-editor" class="hidden">
+          <div class="layout-editor-card">
+            <div class="layout-editor-head"><div><b>MOBILE LAYOUT</b><small>9キー / ボタン配置編集</small></div><button id="layout-close" type="button">閉じる</button></div>
+            <div id="layout-stage">
+              <div id="layout-safe-frame"></div>
+              <div id="layout-hint">ドラッグして配置　／　中央枠はサイズと透明度を調整</div>
+            </div>
+            <div class="layout-tools">
+              <label>枠サイズ <input id="layout-frame-size" type="range" min="35" max="90" value="64"><output id="layout-frame-size-value">64%</output></label>
+              <label>枠透明度 <input id="layout-frame-opacity" type="range" min="5" max="60" value="20"><output id="layout-frame-opacity-value">20%</output></label>
+              <div><button id="layout-reset" type="button">配置をリセット</button><button id="layout-save" class="primary" type="button">保存して閉じる</button></div>
+            </div>
+          </div>
+        </div>
+        <div id="debug-panel" class="debug-panel hidden">
+          <pre id="debug-lines">ZERO DIVISION // DEBUG</pre>
+          <div class="ads-tuner">
+            <b>VIEWMODEL CALIBRATION</b><small>標準時 / ADS時の武器位置を調整</small>
+            <label>調整対象<select id="ads-tune-mode"><option value="normal">標準時</option><option value="ads" selected>ADS時</option></select></label>
+            <em>POSITION</em>
+            <label>X（左右）<input data-ads-tune="x" type="range" min="-0.300" max="0.300" step="0.001"><output data-ads-value="x">0.019</output></label>
+            <label>Y（上下）<input data-ads-tune="y" type="range" min="-0.300" max="0.300" step="0.001"><output data-ads-value="y">0.003</output></label>
+            <label>Z（前後）<input data-ads-tune="z" type="range" min="-0.300" max="0.300" step="0.001"><output data-ads-value="z">0.000</output></label>
+            <em>ROTATION</em>
+            <label>前後傾き<input data-ads-tune="pitch" type="range" min="-1.500" max="1.500" step="0.001"><output data-ads-value="pitch">0.000</output></label>
+            <label>Yaw（左右角）<input data-ads-tune="yaw" type="range" min="-0.500" max="0.500" step="0.001"><output data-ads-value="yaw">0.000</output></label>
+            <label>左右傾き<input data-ads-tune="roll" type="range" min="-0.300" max="0.300" step="0.001"><output data-ads-value="roll">0.000</output></label>
+            <label>Scale（全体）<input data-ads-tune="scale" type="range" min="0.500" max="1.500" step="0.001"><output data-ads-value="scale">1.000</output></label>
+            <label class="ads-check"><input data-ads-tune="level" type="checkbox">銃身を地面と平行にする</label>
+            <div class="tilt-buttons"><button id="ads-pitch-forward" type="button">前へ傾ける</button><button id="ads-pitch-back" type="button">後ろへ傾ける</button></div>
+            <div class="cant-buttons"><button id="ads-cant-left" type="button">← 左へ傾ける</button><button id="ads-cant-right" type="button">右へ傾ける →</button></div>
+            <div><button id="ads-tune-reset" type="button">初期値に戻す</button><button id="ads-tune-copy" type="button">設定コードをコピー</button><button id="ads-tune-download" type="button">game.js を生成</button></div>
+          </div>
+        </div>
+      <div id="pause-card" class="pause-card hidden"><h2>シミュレーション停止</h2><p>クリックで再開</p><button id="exit-to-menu">シミュレーション終了</button></div>
+      <div id="hint">.</div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      'use strict';
+      const state = window.ZERO_DIVISION_STATE = {
+        screen:'deploy-screen', map:'city', bots:6,
+        armor:'ライト', helmet:'偵察', primary:'M4A1', secondary:'P320', melee:'タクティカルナイフ', utility:'救急キット',
+        muzzle:'なし', stock:'なし', sight:'なし',
+        settings:{dashMode:'toggle', crouchMode:'hold', hands:true, compass:true, sensitivity:1, shake:.35, pixelRatio:1.5, shadows:true, sky:true}
+      };
+      const DATA={
+        armor:[['ライト','軽量 / 高機動'],['プレート','標準 / バランス'],['ヘビー','重量 / 安定性']],
+        helmet:[['偵察','軽量 / 低姿勢'],['タクティカル','広視野'],['ヘビー','高い防護性']],
+        primary:[['M4A1','バランス型 / 30発'],['AKM','高威力 / 30発'],['SMG45','高レート / 32発']],
+        secondary:[['P320','標準サブ / 17発'],['G18','高レート / 20発']],
+        melee:[['タクティカルナイフ','近接装備'],['バタフライナイフ','近接装備'],['拳','徒手']],
+        utility:[['救急キット','HP回復']],
+        muzzle:[['なし','マズルアタッチメントなし'],['標準','標準マズル'],['コンペンセータ','反動補正'],['静音モジュール','低音化']],
+        stock:[['なし','標準ストックをそのまま使用'],['標準','標準ストック'],['軽量','軽量化'],['安定','安定型']],
+        sight:[['なし','アイアン／光学照準器なし'],['ドットサイト','小型ドット'],['ホロ','オープンホロ'],['標準サイト','標準照準器']]
+      };
+      const $=id=>document.getElementById(id);
+      const go=id=>{document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active')); const el=$(id); if(el) el.classList.add('active'); state.screen=id;};
+      window.ZERO_DIVISION_GO=go;
+      const armorColor=v=>({'ライト':'#4e6654','プレート':'#59626b','ヘビー':'#353e44'})[v]||'#666';
+      const helmetColor=v=>({'偵察':'#36443d','タクティカル':'#44505c','ヘビー':'#262d32'})[v]||'#444';
+      function updatePreview(){const p=$('operator-preview'); if(!p)return; p.innerHTML=`<div class="operator-doll"><div class="d-head"></div><div class="d-helmet" style="background:${helmetColor(state.helmet)}"></div><div class="d-body" style="background:${armorColor(state.armor)}"></div><div class="d-arm a1"></div><div class="d-arm a2"></div><div class="d-leg l1"></div><div class="d-leg l2"></div></div>`;}
+      function renderChoices(type,id){const el=$(id); if(!el)return; el.innerHTML=''; for(const [name,desc] of DATA[type]){const b=document.createElement('button'); b.className='choice'; b.innerHTML=`<b>${name}</b><small>${desc}</small>`; if(state[type]===name)b.classList.add('selected'); b.onclick=()=>{state[type]=name; renderChoices(type,id); updatePreview();}; el.appendChild(b)}}
+      function bind(){
+        $('open-loadout').onclick=()=>go('loadout-screen'); $('open-settings').onclick=()=>go('settings-screen'); $('quick-deploy').onclick=()=>go('staging-screen'); $('go-staging').onclick=()=>go('staging-screen');
+        document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>go(b.dataset.back));
+        ['armor','helmet','primary','secondary','melee','utility','muzzle','stock','sight'].forEach(type=>renderChoices(type,type+'-choices')); updatePreview();
+        $('bot-count').oninput=e=>{$('bot-count-value').textContent=e.target.value;$('staging-bots').textContent=e.target.value;state.bots=+e.target.value};
+        document.querySelectorAll('.map-option').forEach(b=>b.onclick=()=>{document.querySelectorAll('.map-option').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');state.map=b.dataset.map;$('staging-map-name').textContent=b.querySelector('b').textContent;});
+        $('dash-mode').onchange=e=>state.settings.dashMode=e.target.value; $('crouch-mode').onchange=e=>state.settings.crouchMode=e.target.value; $('hands-toggle').onchange=e=>state.settings.hands=e.target.checked; $('compass-toggle').onchange=e=>{state.settings.compass=e.target.checked; window.ZERO_DIVISION_GAME?.updateCompass?.();}; $('sensitivity').oninput=e=>state.settings.sensitivity=+e.target.value; $('shake-size').oninput=e=>state.settings.shake=+e.target.value; $('pixel-ratio').onchange=e=>state.settings.pixelRatio=+e.target.value; $('shadows-toggle').onchange=e=>state.settings.shadows=e.target.checked; $('sky-toggle').onchange=e=>state.settings.sky=e.target.checked;
+        $('deploy-btn').onclick=async()=>{
+          go('loading-screen');
+          const fill=$('loading-fill'), percent=$('loading-percent'), status=$('loading-status');
+          if(fill)fill.style.width='6%'; if(percent)percent.textContent='6%'; if(status)status.textContent='ゲーム本体を読み込んでいます…';
+          try{
+            const mod=await import('./js/game.js?build=3200');
+            if(!window.ZERO_DIVISION_GAME) window.ZERO_DIVISION_GAME=new mod.ZeroDivisionGame();
+            await window.ZERO_DIVISION_GAME.start(state.map,state.bots);
+          }catch(err){
+            console.error('Zero Division deployment failed:',err);
+            go('staging-screen');
+            const message=$('deploy-error')||document.createElement('div');
+            message.id='deploy-error'; message.textContent='ゲームの読み込みに失敗しました。Consoleの赤いエラーを確認してください。';
+            message.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);padding:12px 18px;background:#11181b;border:1px solid #aaff24;color:#fff;z-index:99999;font:13px system-ui,sans-serif;';
+            if(!message.parentElement)document.body.appendChild(message);
+          }
+        };
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind,{once:true}); else bind();
+    })();
+  </script>
+  <script type="module" src="./js/mobile-controls.js"></script>
+</body>
+</html>
