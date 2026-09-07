@@ -1,0 +1,82 @@
+{
+  "format": "zero-division-sockets-v2",
+  "model": "m4a1.glb",
+  "sockets": {
+    "optic": {
+      "kind": "optic",
+      "position": [
+        0.484,
+        0.939,
+        0.011
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "enabled": true
+    },
+    "foregrip": {
+      "kind": "foregrip",
+      "position": [
+        0.001,
+        0.587,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "enabled": true
+    },
+    "left_hand": {
+      "kind": "left_hand",
+      "position": [
+        0,
+        0.6,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "enabled": true
+    },
+    "right_hand": {
+      "kind": "right_hand",
+      "position": [
+        0.63,
+        0.508,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "enabled": true
+    }
+  }
+}
