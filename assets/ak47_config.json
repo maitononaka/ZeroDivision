@@ -1,0 +1,127 @@
+{
+  "format": "zero-division-weapon-camera-v2",
+  "model": "ak47.glb",
+  "weaponRoot": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ]
+  },
+  "cameras": {
+    "normal": {
+      "position": [
+        0.8517724322476404,
+        0.12609396869426998,
+        -0.2837200842675337
+      ],
+      "rotation": [
+        -0.15842956492495944,
+        1.4526390809711005,
+        0
+      ],
+      "fov": 45
+    },
+    "ads": {
+      "position": [
+        0.48832,
+        0.06353,
+        -0.604
+      ],
+      "rotation": [
+        -0.11395254686270978,
+        1.5304792210738276,
+        0
+      ],
+      "fov": 45
+    }
+  },
+  "sockets": {
+    "optic": {
+      "kind": "optic",
+      "position": [
+        0.484,
+        0.939,
+        0.011
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "enabled": true
+    },
+    "foregrip": {
+      "kind": "foregrip",
+      "position": [
+        0.001,
+        0.587,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "enabled": true
+    },
+    "left_hand": {
+      "kind": "left_hand",
+      "position": [
+        0,
+        0.6,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "enabled": true
+    },
+    "right_hand": {
+      "kind": "right_hand",
+      "position": [
+        0.63,
+        0.508,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "enabled": true
+    }
+  }
+}
