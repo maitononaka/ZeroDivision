@@ -8,7 +8,7 @@ const UP = new THREE.Vector3(0,1,0);
 const TMP_M = new THREE.Matrix4();
 // Runtime-editable ADS trim. Press 0 in-game to tune and export this file.
 const ADS_TUNE = { x: -0.024, y: 0.000, z: 0.000, pitch: -0.077, yaw: -0.039, roll: -0.006, scale: 1.000, level: false };
-const AKM_TUNES = { normal: { x: 0.000, y: 0.000, z: 0.000, pitch: 0.000, yaw: 0.000, roll: 0.000, scale: 1.000, level: false }, ads: { x: 0.013, y: 0.060, z: 0.000, pitch: -0.097, yaw: -0.039, roll: -0.012, scale: 0.996, level: true } };
+const AKM_TUNES = { normal: { x: 0.000, y: 0.000, z: 0.000, pitch: 0.000, yaw: 0.000, roll: 0.000, scale: 1.000, level: false }, ads: { x: 0.013, y: 0.060, z: 0.000, pitch: -0.097, yaw: -0.039, roll: -0.012, scale: 0.996, level: false } };
 
 const WEAPONS = {
   primary: {
@@ -1024,12 +1024,10 @@ export class ZeroDivisionGame{
         // lower. Counter the GLB's left lean with a small rightward ADS roll.
         this.weaponGroup.position.y+=tune.y*blend;
         this.weaponGroup.position.z+=tune.z*blend;
-        if(tune.level){
-          // Rebuild the local rotation as if the camera only had yaw: the gun
-          // continues to turn left/right but its barrel stays ground-parallel.
-          const yawOnly=new THREE.Quaternion().setFromEuler(new THREE.Euler(0,this.camera.rotation.y,0,'YXZ'));
-          this.weaponGroup.quaternion.copy(this.camera.quaternion.clone().invert().multiply(yawOnly).multiply(this.weaponGroup.quaternion)).normalize();
-        }
+        // Do not derive the weapon rotation from the player camera here.
+        // Each weapon's editor camera pose already defines its local ADS
+        // transform. Re-applying the player camera rotation makes the AKM
+        // iron sight jump/change viewpoint while entering ADS.
         this.weaponGroup.rotateX(tune.pitch*blend);
         this.weaponGroup.rotateY(tune.yaw*blend);
         this.weaponGroup.rotateZ(tune.roll*blend);
